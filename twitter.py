@@ -7,6 +7,7 @@ from textblob import TextBlob
 import tweepy
 import re
 import pandas as pd
+import matplotlib.pyplot as plt
 
 BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAAK2KRAEAAAAAW%2BsH09xL6PpxZ%2FalypgTqWxwhcg%3DybBZb0IYIHGmdZOlNQQ4w0dyskNaS2vtF57l7cH11ZJiuy8uuG"
 
@@ -35,14 +36,14 @@ class TweetSearch():
 
         return clean_text
 
-    def search_by_keyword(self, keyword, count=10, result_type='mixed', lang='en', tweet_mode='extended', start_date=datetime.now):
+    def search_by_keyword(self, keyword, count=5000, result_type='mixed', lang='en', tweet_mode='extended', start_date=datetime.now):
         '''
         Search for the twitters that has commented the keyword subject
         '''
         tweets_founded = tweepy.Cursor(self.connected_token.search_tweets, 
                         q=keyword, tweet_mode=tweet_mode,
-                        rpp=count, result_type=result_type,
-                        since=start_date, lang=lang,
+                        count=count, result_type=result_type,
+                        lang=lang,
                         include_entities=True).items(count)
 
         return tweets_founded
@@ -98,9 +99,11 @@ tweets_list = analyzer.prepare_tweets_list(tweets_iter)
 
 # Analizer result with DataFrame
 tweets_df = pd.DataFrame(tweets_list)
-tweets_df.head()
+print(tweets_df.head())
 
 # Print result
 tweets_df['Sentiment'] = analyzer.sentiment_polarity(tweets_df['TweetText'])
-
-tweets_df.head()
+sentiment_percentage = tweets_df.groupby('Sentiment')['ID'].count().apply(lambda x:100*x/count)
+sentiment_percentage.plot(kind='bar')
+plt.show()
+plt.savefig('sentiments_tweets.png', bbox_inches='tight', pad_inches=0.5)
